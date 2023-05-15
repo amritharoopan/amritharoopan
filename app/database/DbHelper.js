@@ -1,5 +1,5 @@
 import * as SQLite from 'expo-sqlite';
-const db = SQLite.openDatabase('test208');
+const db = SQLite.openDatabase('test213');
 
 export const createDataBases = () => {
     db.transaction(tx => {
@@ -144,14 +144,12 @@ export const getInvigilationFromSlNo = (id, callBack) => {
     });
 }
 
-export const registerAttendance = (student_id, exam_id, status, callBackSuccess, callBackFailure) => {
+export const registerAttendance = (student_id, exam_id, status, callBackSuccess) => {
     db.transaction(tx => {
-        tx.executeSql("INSERT INTO attendance_register VALUES ('" + student_id + "'," + exam_id + ",'" + status + "')", null,
-            (txObj, resultSet) => callBackSuccess(),
-            (txObj, error) => callBackFailure(error.message == 'UNIQUE constraint failed: attendance_register.student_id, attendance_register.exam_id (code 1555 SQLITE_CONSTRAINT_PRIMARYKEY)' ? 'Attendance already marked for the student' : 'Something went wrong, Please try again later')
+        tx.executeSql("UPDATE attendance_register set status = '" + status + "' WHERE student_id = '" + student_id + "' and exam_id = " + exam_id, null,
+            (txObj, resultSet) => callBackSuccess()
         )
 
-        tx.executeSql("select * from students", null,)
     });
 }
 
@@ -170,6 +168,12 @@ export const getStudentsFromBatch = (batch_name, callBack) => {
             (txObj, resultSet) => callBack(resultSet.rows._array),
             (txObj, error) => console.log(error.message)
         )
+    });
+}
+
+export const addToAttendance = (stud_id, exam_id) => {
+    db.transaction(tx => {
+        tx.executeSql("insert into attendance_register values ('" + stud_id + "'," + exam_id + ", NULL)")
     });
 }
 

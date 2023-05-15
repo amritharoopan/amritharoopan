@@ -2,9 +2,10 @@ import { Alert, Button, FlatList, Image, Modal, StyleSheet, Text, TouchableOpaci
 import React, { useEffect, useState } from 'react'
 import StatusBarExcludedArea from '../../components/StatusBarExcludedArea'
 import Colors from '../../constants/Colors'
-import { checkIfStudentIsAttending, getInvigilationFromSlNo, getStudentsFromBatch, registerAttendance } from '../../database/DbHelper'
+import { addToAttendance, checkIfStudentIsAttending, getInvigilationFromSlNo, getStudentsFromBatch, registerAttendance } from '../../database/DbHelper'
 import { BarCodeScanner } from 'expo-barcode-scanner'
 import { Ionicons } from '@expo/vector-icons';
+import { FontAwesome } from '@expo/vector-icons';
 import LottieView from 'lottie-react-native'
 
 const ExamAttendanceScreen = ({ navigation, route }) => {
@@ -15,6 +16,9 @@ const ExamAttendanceScreen = ({ navigation, route }) => {
     const [scannerVisible, setScannerVisible] = useState(false);
     const [studentList, setStudentList] = useState([]);
     const [reportVisible, setReportVisible] = useState(false);
+    const [entrySuccess, setEntrySuccess] = useState(false)
+    const [reportItem, setReportItem] = useState(null);
+
 
     const requestCameraPermission = () => {
         (async () => {
@@ -50,12 +54,12 @@ const ExamAttendanceScreen = ({ navigation, route }) => {
             if (attending) {
                 registerAttendance(data, route.params.slno, 'present',
                     () => {
-
+                        setEntrySuccess(true);
                         reloadStudents();
                     },
                     (msg) => {
                         console.log(msg);
-                        Alert.alert('Attendance', msg, [
+                        Alert.alert('Attendance Alert', msg, [
                             {
                                 text: 'OK',
                                 onPress: () => {
@@ -66,14 +70,24 @@ const ExamAttendanceScreen = ({ navigation, route }) => {
                         ]);
                     }
                 )
+            } else {
+                Alert.alert('Attendance Alert', 'User not registered with the system', [
+                    {
+                        text: 'OK',
+                        onPress: () => {
+                            setScannerVisible(false);
+                            setScanned(false);
+                        }
+                    }
+                ]);
             }
         })
     }
 
     const renderQuickAttendance = (item) => {
-
+        addToAttendance(item.stud_id, route.params.slno)
         return (
-            item.exam_id == null && < View style={{ flex: 1, flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 10, width: '100%' }
+            item.exam_id == route.params.slno && item.status == null && <View style={{ flex: 1, flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 10, width: '100%' }
             }>
                 <View >
                     <Text style={{ fontSize: 20, fontWeight: 'bold' }}>{item.first_name + ' ' + item.second_name}</Text>
@@ -82,20 +96,20 @@ const ExamAttendanceScreen = ({ navigation, route }) => {
                 <View style={{ alignItems: 'center', flexDirection: 'row', height: '100%' }}>
                     <Ionicons
                         onPress={() => {
-                            registerAttendance(item.stud_id, route.params.slno, 'present', () => reloadStudents(), (msg) => {
-                                console.log(msg);
-                            })
+                            registerAttendance(item.stud_id, route.params.slno, 'present', () => reloadStudents())
                         }} style={{ marginStart: 10 }} name="ios-checkmark-circle-sharp" size={30} color="green" />
                     <Ionicons onPress={() => {
-                        registerAttendance(item.stud_id, route.params.slno, 'absent', () => reloadStudents(), (msg) => {
-                            console.log(msg);
-                        })
+                        registerAttendance(item.stud_id, route.params.slno, 'absent', () => reloadStudents())
                     }} style={{ marginStart: 30 }} name="close-circle-sharp" size={30} color="red" />
                 </View>
             </View >
         );
 
     }
+
+    const handleOnSelectItem = (item) => {
+        setReportItem(item);
+    };
 
     const renderReportList = (item) => {
 
@@ -105,7 +119,8 @@ const ExamAttendanceScreen = ({ navigation, route }) => {
                     <Text style={{ fontSize: 20, fontWeight: 'bold' }}>{item.first_name + ' ' + item.second_name}</Text>
                     <Text>{item.stud_id}</Text>
                 </View>
-                <View >
+                <View style={{ flexDirection: 'row', alignItems: 'center' }} >
+                    <FontAwesome onPress={() => { handleOnSelectItem(item) }} style={{ marginTop: 5, marginEnd: 10 }} name="edit" size={30} color="dodgerblue" />
                     {
                         item.exam_id == route.params.slno && item.status != null && item.status == 'present' ?
                             <Image style={{ height: 30, width: 30 }} source={require('../../../assets/present.png')} />
@@ -152,7 +167,7 @@ const ExamAttendanceScreen = ({ navigation, route }) => {
             }}>
                 <View style={{ alignItems: 'center', backgroundColor: 'rgba(0,0,0,0.4)', flex: 1, justifyContent: 'center' }}>
                     {
-                        scanned == false ?
+                        entrySuccess == false ?
                             <BarCodeScanner
                                 barCodeTypes={[BarCodeScanner.Constants.BarCodeType.qr]}
                                 onBarCodeScanned={scanned ? undefined : handleBarCodeScanned}
@@ -165,6 +180,7 @@ const ExamAttendanceScreen = ({ navigation, route }) => {
                                     loop={false}
                                     style={{ flex: 1 }}
                                     onAnimationFinish={() => {
+                                        setEntrySuccess(false);
                                         setScannerVisible(false);
                                         setScanned(false);
                                     }}
@@ -202,6 +218,35 @@ const ExamAttendanceScreen = ({ navigation, route }) => {
                     </View>
 
                 </View>
+            </Modal>
+
+            <Modal visible={reportItem != null} animationType='slide' transparent={true} onRequestClose={() => {
+                setReportItem(null);
+            }}>
+                <View style={{ alignItems: 'center', backgroundColor: 'rgba(0,0,0,0.8)', flex: 1, justifyContent: 'center' }}>
+                    <View style={{ alignItems: 'center', borderRadius: 10, backgroundColor: Colors.white, paddingVertical: 30, width: '70%' }}>
+                        <View style={{ alignItems: 'center', }} >
+                            <Text style={{ fontSize: 20, fontWeight: 'bold' }}>{reportItem && reportItem.first_name + ' ' + reportItem.second_name}</Text>
+                            <Text>{reportItem && reportItem.stud_id}</Text>
+                        </View>
+                        <View style={{ alignItems: 'center', flexDirection: 'row', marginTop: 30 }}>
+                            <Ionicons
+                                onPress={() => {
+                                    registerAttendance(reportItem && reportItem.stud_id, route.params.slno, 'present', () => {
+                                        reloadStudents();
+                                        setReportItem(null);
+                                    })
+                                }} style={{ marginStart: 10 }} name="ios-checkmark-circle-sharp" size={60} color="green" />
+                            <Ionicons onPress={() => {
+                                registerAttendance(reportItem && reportItem.stud_id, route.params.slno, 'absent', () => {
+                                    reloadStudents()
+                                    setReportItem(null);
+                                })
+                            }} style={{ marginStart: 30 }} name="close-circle-sharp" size={60} color="red" />
+                        </View>
+                    </View>
+                </View>
+
             </Modal>
 
         </View>

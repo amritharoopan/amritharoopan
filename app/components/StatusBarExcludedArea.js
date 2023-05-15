@@ -1,6 +1,7 @@
 import { Platform, SafeAreaView, StatusBar, StyleSheet, Text, View } from 'react-native'
 import React from 'react'
 import { LinearGradient } from 'expo-linear-gradient'
+import Constants from 'expo-constants';
 
 const StatusBarExcludedArea = (props) => {
     return (
@@ -20,6 +21,6 @@ export default StatusBarExcludedArea
 const styles = StyleSheet.create({
     safe: {
         flex: 1,
-        marginTop: Platform.OS === "android" ? StatusBar.currentHeight : 0,
+        marginTop: Platform.OS === "android" ? StatusBar.currentHeight : Constants.statusBarHeight,
     }
 })

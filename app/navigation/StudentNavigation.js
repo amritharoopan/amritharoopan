@@ -4,6 +4,7 @@ import StudentsHomeScreen from '../screens/studentScreens/StudentsHomeScreen';
 import CustomTabBar from '../components/CustomTabBar';
 import StudentSeatingScreen from '../screens/studentScreens/StudentSeatingScreen';
 import StudentTimeTable from '../screens/studentScreens/StudentTimeTable';
+import StudentProfileScreen from '../screens/studentScreens/StudentProfileScreen';
 
 const Tab = createBottomTabNavigator();
 const StudentNavigation = () => {
@@ -35,7 +36,7 @@ const StudentNavigation = () => {
             />
             <Tab.Screen
                 name='StudentProfile'
-                component={StudentsHomeScreen}
+                component={StudentProfileScreen}
                 options={{
                     headerShown: false,
                 }}
