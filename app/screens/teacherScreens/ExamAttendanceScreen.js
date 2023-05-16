@@ -4,9 +4,11 @@ import StatusBarExcludedArea from '../../components/StatusBarExcludedArea'
 import Colors from '../../constants/Colors'
 import { addToAttendance, checkIfStudentIsAttending, getInvigilationFromSlNo, getStudentsFromBatch, registerAttendance } from '../../database/DbHelper'
 import { BarCodeScanner } from 'expo-barcode-scanner'
-import { Ionicons } from '@expo/vector-icons';
-import { FontAwesome } from '@expo/vector-icons';
+import { Ionicons, FontAwesome, MaterialCommunityIcons } from '@expo/vector-icons';
 import LottieView from 'lottie-react-native'
+import XLSX from 'xlsx';
+import * as FileSystem from 'expo-file-system';
+import * as Sharing from 'expo-sharing';
 
 const ExamAttendanceScreen = ({ navigation, route }) => {
 
@@ -134,6 +136,41 @@ const ExamAttendanceScreen = ({ navigation, route }) => {
         );
 
     }
+
+
+    async function writeToExcel() {
+        var studData = [];
+        studentList.forEach((value) => {
+            if (value.exam_id == route.params.slno) {
+                studData.push({
+                    "Name": value.first_name + ' ' + value.second_name,
+                    "Roll no": value.stud_id,
+                    "Status": value.status != null ? value.status : "absent"
+                })
+            }
+        })
+
+        console.log(studData);
+        var ws = XLSX.utils.json_to_sheet(studData);
+        var wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, "Cities");
+        const wbout = XLSX.write(wb, {
+            type: 'base64',
+            bookType: "xlsx"
+        });
+        const uri = FileSystem.cacheDirectory + (data != null ? data.exam_date + '_' + data.subject + '_attendance.xlsx' : 'attendance.xlsx');
+        //console.log(`Writing to ${JSON.stringify(uri)} with text: ${wbout}`);
+        await FileSystem.writeAsStringAsync(uri, wbout, {
+            encoding: FileSystem.EncodingType.Base64
+        });
+
+        await Sharing.shareAsync(uri, {
+            mimeType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            dialogTitle: 'MyWater data',
+            UTI: 'com.microsoft.excel.xlsx'
+        });
+    }
+
     return (
         <View style={{ backgroundColor: Colors.bgGrey, flex: 1 }}>
             <StatusBarExcludedArea style={{ height: 1 }} />
@@ -197,6 +234,22 @@ const ExamAttendanceScreen = ({ navigation, route }) => {
                     <View style={{ flexDirection: 'row', backgroundColor: Colors.white, justifyContent: 'center', paddingVertical: 10 }}>
                         <Ionicons onPress={() => setReportVisible(false)} style={{ alignSelf: 'center', left: 10, position: "absolute", }} name="close" size={30} color="black" />
                         <Text style={{ alignSelf: 'center', fontSize: 25, fontWeight: 'bold' }}>{data && data.exam_date}</Text>
+                        <MaterialCommunityIcons
+                            onPress={() => {
+                                Alert.alert('Share File', 'Do you wish to export and share attendance as an Excel file', [
+                                    {
+                                        text: "YES",
+                                        onPress: () => {
+                                            writeToExcel()
+                                        }
+                                    },
+                                    {
+                                        text: "No",
+
+                                    }
+                                ])
+                            }}
+                            name='microsoft-excel' style={{ alignSelf: 'center', right: 10, position: "absolute", }} size={30} color="green" />
                     </View>
                     <View style={{ alignItems: 'center', marginTop: 20, paddingHorizontal: 20, }}>
                         <View style={{ flexDirection: 'row' }}>

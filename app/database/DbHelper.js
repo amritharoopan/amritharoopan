@@ -1,5 +1,5 @@
 import * as SQLite from 'expo-sqlite';
-const db = SQLite.openDatabase('test213');
+const db = SQLite.openDatabase('test220');
 
 export const createDataBases = () => {
     db.transaction(tx => {
@@ -231,6 +231,15 @@ export const selectuser = () => {
     db.transaction(tx => {
         tx.executeSql("SELECT * from user;", null,
             (txtObj, resultSet) => console.log(resultSet.rows._array),
+            (txObj, error) => console.log(error.message)
+        )
+    });
+}
+
+export const checkUserForQrLogin = (userId, callBack) => {
+    db.transaction(tx => {
+        tx.executeSql("select * from user where id = '" + userId + "';", null,
+            (txObj, resultSet) => callBack(resultSet.rows._array),
             (txObj, error) => console.log(error.message)
         )
     });

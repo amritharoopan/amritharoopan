@@ -27,7 +27,7 @@ const StudentProfileScreen = ({ navigation }) => {
                                     authContext.setUser(null);
                                     navigation.reset({
                                         index: 0,
-                                        routes: [{ name: 'login' }],
+                                        routes: [{ name: 'welcome' }],
                                     })
                                 }
                             },

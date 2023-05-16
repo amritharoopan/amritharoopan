@@ -30,6 +30,9 @@ const TeacherNavigation = () => {
             <Tab.Screen
                 name='StudentProfile'
                 component={TeacherHomeScreen}
+                options={{
+                    headerShown: false,
+                }}
             />
         </Tab.Navigator>
     )

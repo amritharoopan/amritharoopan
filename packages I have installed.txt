@@ -20,3 +20,9 @@ npm install @react-navigation/bottom-tabs
 npx expo install expo-sqlite
 
 npx expo install lottie-react-native
+
+npm i xlsx --save
+
+expo install expo-file-system
+
+expo install expo-sharing

@@ -8,11 +8,10 @@ import StatusBarExcludedArea from '../../components/StatusBarExcludedArea'
 import { checkLogin } from '../../database/DbHelper'
 import AuthContext from '../../utils/context'
 
-
 const LoginScreen = ({ navigation }) => {
   const [checked, setChecked] = useState(false)
-  const [username, setUsername] = useState('student.101');
-  const [password, setPassword] = useState('black');
+  const [username, setUsername] = useState('teacher.101');
+  const [password, setPassword] = useState('pass');
   const authContext = useContext(AuthContext);
 
 
