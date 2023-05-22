@@ -1,5 +1,5 @@
 import * as SQLite from 'expo-sqlite';
-const db = SQLite.openDatabase('test220');
+const db = SQLite.openDatabase('test230');
 
 export const createDataBases = () => {
     db.transaction(tx => {
@@ -8,9 +8,9 @@ export const createDataBases = () => {
         tx.executeSql('CREATE TABLE user (id char(20) PRIMARY KEY, password char(50), role char(20), FOREIGN KEY (role) REFERENCES roles(role_name));');
         tx.executeSql('CREATE TABLE teachers (slno integer primary key AUTOINCREMENT, tcode char(20) UNIQUE, first_name char(30),second_name char(30), email char(50), gender char(15), dob date, contact integer(15), address char(100),FOREIGN KEY (tcode) REFERENCES user(id) );');
         tx.executeSql('CREATE TABLE batch (batch_name char(20) PRIMARY KEY, semester char(5), classroom char(10),in_charge char(30),total_student integer(5), FOREIGN key (in_charge) REFERENCES teachers(tcode));');
-        tx.executeSql('CREATE TABLE invigilation_schedule (slno integer PRIMARY key AUTOINCREMENT, invigilator char(20), subject char(50),batch char(20), exam_date date, exam_time char(5), block char(10), room char(10), FOREIGN KEY (invigilator) REFERENCES teachers(tcode) );');
+        tx.executeSql('CREATE TABLE invigilation_schedule (slno integer PRIMARY key AUTOINCREMENT, invigilator char(20), subject char(50),batch char(20), exam_date date, exam_time char(5), exam_session char(15), block char(10), room char(10), FOREIGN KEY (invigilator) REFERENCES teachers(tcode) );');
         tx.executeSql('CREATE TABLE students (slno INTEGER PRIMARY KEY AUTOINCREMENT, stud_id char(20) UNIQUE, stud_batch char(20), first_name char(30),second_name char(30), email char(50), gender char(15), dob date, contact integer(15), address char(100),FOREIGN KEY (stud_id) REFERENCES user(id), FOREIGN KEY (stud_batch) REFERENCES batch(batch_name));');
-        tx.executeSql('CREATE TABLE attendance_register (student_id char(20), exam_id integer, status char(10), PRIMARY KEY(student_id, exam_id), FOREIGN KEY(student_id) REFERENCES students(stud_id), FOREIGN KEY(exam_id) REFERENCES invigilation_schedule(slno));');
+        tx.executeSql('CREATE TABLE attendance_register (student_id char(20), exam_id integer, status char(10),marked_time char(30), PRIMARY KEY(student_id, exam_id), FOREIGN KEY(student_id) REFERENCES students(stud_id), FOREIGN KEY(exam_id) REFERENCES invigilation_schedule(slno));');
         tx.executeSql('CREATE table subjects ( subject_name char(50) primary key,  t_code char(20), FOREIGN KEY (t_code) REFERENCES teachers(tcode));');
         tx.executeSql('CREATE TABLE exam_seat (seat_no char(5) , stud_id char(20), room_no char(10), PRIMARY key (seat_no, room_no), FOREIGN KEY (stud_id) REFERENCES students(stud_id));', null, () => { console.log("last tabe done"); });
 
@@ -56,10 +56,10 @@ export const loadDummyData = () => {
 
 
 
-        tx.executeSql("INSERT INTO invigilation_schedule (invigilator,subject,batch,exam_date,exam_time,block,room) VALUES ('teacher.101','Artificial Intelligence', '2020 Int MCA','2023-06-15','08:00','D','200');");
-        tx.executeSql("INSERT INTO invigilation_schedule (invigilator,subject,batch,exam_date,exam_time,block,room) VALUES ('teacher.102','Computer Graphics', '2018 Int MCA','2023-06-16','08:00','D','200');");
-        tx.executeSql("INSERT INTO invigilation_schedule (invigilator,subject,batch,exam_date,exam_time,block,room) VALUES ('teacher.101','Python Programming', '2020 Int MCA','2023-06-18','15:00','D','206');");
-        tx.executeSql("INSERT INTO invigilation_schedule (invigilator,subject,batch,exam_date,exam_time,block,room) VALUES ('teacher.101','Cryptography and Cyber Security', '2020 Int MCA','2023-06-20','15:00','D','206');");
+        tx.executeSql("INSERT INTO invigilation_schedule (invigilator,subject,batch,exam_date,exam_time,exam_session,block,room) VALUES ('teacher.101','Artificial Intelligence', '2020 Int MCA','2023-06-15','08:00','Forenoon','D','200');");
+        tx.executeSql("INSERT INTO invigilation_schedule (invigilator,subject,batch,exam_date,exam_time,exam_session,block,room) VALUES ('teacher.102','Computer Graphics', '2020 Int MCA','2023-06-16','08:00','Forenoon','D','200');");
+        tx.executeSql("INSERT INTO invigilation_schedule (invigilator,subject,batch,exam_date,exam_time,exam_session,block,room) VALUES ('teacher.101','Python Programming', '2020 Int MCA','2023-06-18','15:00','Afternoon','D','206');");
+        tx.executeSql("INSERT INTO invigilation_schedule (invigilator,subject,batch,exam_date,exam_time,exam_session,block,room) VALUES ('teacher.101','Cryptography and Cyber Security', '2018 Int MCA','2023-06-20','15:00','Afternoon','D','206');");
 
 
         tx.executeSql("INSERT INTO students (stud_id,stud_batch,first_name,second_name,email,gender,dob,contact,address) VALUES ('KH.SC.I5MCA18001','2018 Int MCA','Abhirami','A','some_email','female','1999-08-02',9995559990,'some house at some where');");
@@ -144,10 +144,14 @@ export const getInvigilationFromSlNo = (id, callBack) => {
     });
 }
 
-export const registerAttendance = (student_id, exam_id, status, callBackSuccess) => {
+export const registerAttendance = (student_id, exam_id, status, markedDate, callBackSuccess) => {
     db.transaction(tx => {
-        tx.executeSql("UPDATE attendance_register set status = '" + status + "' WHERE student_id = '" + student_id + "' and exam_id = " + exam_id, null,
-            (txObj, resultSet) => callBackSuccess()
+        tx.executeSql("UPDATE attendance_register set status = '" + status + "', marked_time = '" + markedDate + "' WHERE student_id = '" + student_id + "' and exam_id = " + exam_id, null,
+            (txObj, resultSet) => {
+                console.log("ss\t\t" + resultSet.rows._array)
+                callBackSuccess();
+            },
+            (txObj, error) => console.log(error.message)
         )
 
     });
@@ -173,7 +177,7 @@ export const getStudentsFromBatch = (batch_name, callBack) => {
 
 export const addToAttendance = (stud_id, exam_id) => {
     db.transaction(tx => {
-        tx.executeSql("insert into attendance_register values ('" + stud_id + "'," + exam_id + ", NULL)")
+        tx.executeSql("insert into attendance_register values ('" + stud_id + "'," + exam_id + ", NULL, NULL)")
     });
 }
 
@@ -240,6 +244,15 @@ export const checkUserForQrLogin = (userId, callBack) => {
     db.transaction(tx => {
         tx.executeSql("select * from user where id = '" + userId + "';", null,
             (txObj, resultSet) => callBack(resultSet.rows._array),
+            (txObj, error) => console.log(error.message)
+        )
+    });
+}
+
+export const getStudCount = (batchName, callBack) => {
+    db.transaction(tx => {
+        tx.executeSql("select * from students where stud_batch = '" + batchName + "';", null,
+            (txObj, resultSet) => callBack(resultSet.rows.length),
             (txObj, error) => console.log(error.message)
         )
     });

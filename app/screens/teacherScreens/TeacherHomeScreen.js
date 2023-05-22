@@ -3,21 +3,27 @@ import React, { useContext, useEffect, useState } from 'react'
 import StatusBarExcludedArea from '../../components/StatusBarExcludedArea'
 import Colors from '../../constants/Colors'
 import AuthContext from '../../utils/context'
-import { getInvigilationSchedule } from '../../database/DbHelper'
+import { getInvigilationSchedule, getStudCount } from '../../database/DbHelper'
 
 
 
 const TeacherHomeScreen = ({ navigation }) => {
     const authContext = useContext(AuthContext);
     const [listData, setListData] = useState([]);
+    const [studCount, setStudCount] = useState([]);
     useEffect(() => {
         getInvigilationSchedule(authContext.user, (data) => {
             setListData(data);
-            console.log(listData);
+            data.forEach(element => {
+
+                getStudCount(element.batch, (data) => {
+                    studCount.push(data);
+                })
+            });
         })
     }, [])
 
-    const renderExamBox = (item) => {
+    const renderExamBox = (item, index) => {
         console.log(item)
         return (
             <TouchableOpacity
@@ -29,7 +35,9 @@ const TeacherHomeScreen = ({ navigation }) => {
                 style={styles.cardStyle}>
                 <Text style={{ fontSize: 30, fontWeight: 'bold' }}>{item.batch}</Text>
                 <Text style={{ marginTop: 5 }}>{item.subject}</Text>
-                <Text style={{ marginTop: 20 }}>{'students:  ' + item.total_student}</Text>
+                <Text style={{ marginTop: 5 }}>{item.exam_date}</Text>
+                <Text style={{ marginTop: 5 }}>{item.exam_session}</Text>
+                <Text style={{ marginTop: 20 }}>{'students:  ' + studCount[index]}</Text>
             </TouchableOpacity>
         )
     }
@@ -46,7 +54,7 @@ const TeacherHomeScreen = ({ navigation }) => {
                 data={listData}
                 numColumns={2}
                 keyExtractor={(item, index) => 'key_' + index}
-                renderItem={(itemData) => renderExamBox(itemData.item)}
+                renderItem={(itemData) => renderExamBox(itemData.item, itemData.index)}
             />
         </View>
     )
@@ -58,7 +66,7 @@ const styles = StyleSheet.create({
     cardStyle: {
         backgroundColor: Colors.white,
         borderRadius: 20,
-        flex: 0.5,
+        flex: 1,
         marginHorizontal: 10,
         marginVertical: 10,
         padding: 20,

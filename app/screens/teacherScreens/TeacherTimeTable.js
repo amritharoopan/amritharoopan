@@ -27,6 +27,11 @@ const TeacherTimeTable = () => {
                     <Text style={{ color: 'dodgerblue', fontSize: 18, fontWeight: '600' }}>Class:  </Text>
                     <Text style={{ fontSize: 18 }}>{item.batch}</Text>
                 </View>
+                <View style={{ flexDirection: 'row' }}>
+                    <Text style={{ color: 'dodgerblue', fontSize: 18, fontWeight: '600' }}>Time:  </Text>
+                    <Text style={{ fontSize: 18 }}>{item.exam_time}</Text>
+                    <Text style={{ fontSize: 18 }}>{'  ' + item.exam_session}</Text>
+                </View>
             </View>
         );
     }

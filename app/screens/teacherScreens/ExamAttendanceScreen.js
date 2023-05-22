@@ -1,4 +1,4 @@
-import { Alert, Button, FlatList, Image, Modal, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
+import { Alert, Button, FlatList, Image, Modal, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 import React, { useEffect, useState } from 'react'
 import StatusBarExcludedArea from '../../components/StatusBarExcludedArea'
 import Colors from '../../constants/Colors'
@@ -48,13 +48,19 @@ const ExamAttendanceScreen = ({ navigation, route }) => {
 
     });
 
+    const zeroPreponder = (n) => {
+        return ("0" + n).slice(-2);
+    }
+
     const handleBarCodeScanned = ({ type, data }) => {
         setScanned(true);
         setQrdata(data);
         console.log(data);
         checkIfStudentIsAttending(data, route.params.batch, (attending) => {
             if (attending) {
-                registerAttendance(data, route.params.slno, 'present',
+                var d = new Date();
+                var markedDate = zeroPreponder(d.getDate()) + '-' + zeroPreponder(d.getMonth() + 1) + '-' + d.getFullYear() + ' ' + zeroPreponder(d.getHours()) + ':' + zeroPreponder(d.getMinutes());
+                registerAttendance(data, route.params.slno, 'present', markedDate,
                     () => {
                         setEntrySuccess(true);
                         reloadStudents();
@@ -98,10 +104,14 @@ const ExamAttendanceScreen = ({ navigation, route }) => {
                 <View style={{ alignItems: 'center', flexDirection: 'row', height: '100%' }}>
                     <Ionicons
                         onPress={() => {
-                            registerAttendance(item.stud_id, route.params.slno, 'present', () => reloadStudents())
+                            var d = new Date();
+                            var markedDate = zeroPreponder(d.getDate()) + '-' + zeroPreponder(d.getMonth() + 1) + '-' + d.getFullYear() + ' ' + zeroPreponder(d.getHours()) + ':' + zeroPreponder(d.getMinutes());
+                            registerAttendance(item.stud_id, route.params.slno, 'present', markedDate, () => reloadStudents())
                         }} style={{ marginStart: 10 }} name="ios-checkmark-circle-sharp" size={30} color="green" />
                     <Ionicons onPress={() => {
-                        registerAttendance(item.stud_id, route.params.slno, 'absent', () => reloadStudents())
+                        var d = new Date();
+                        var markedDate = zeroPreponder(d.getDate()) + '-' + zeroPreponder(d.getMonth() + 1) + '-' + d.getFullYear() + ' ' + zeroPreponder(d.getHours()) + ':' + zeroPreponder(d.getMinutes());
+                        registerAttendance(item.stud_id, route.params.slno, 'absent', markedDate, () => reloadStudents())
                     }} style={{ marginStart: 30 }} name="close-circle-sharp" size={30} color="red" />
                 </View>
             </View >
@@ -120,6 +130,7 @@ const ExamAttendanceScreen = ({ navigation, route }) => {
                 <View >
                     <Text style={{ fontSize: 20, fontWeight: 'bold' }}>{item.first_name + ' ' + item.second_name}</Text>
                     <Text>{item.stud_id}</Text>
+                    <Text>{item.marked_time != null ? item.marked_time : 'Attendance not marked'}</Text>
                 </View>
                 <View style={{ flexDirection: 'row', alignItems: 'center' }} >
                     <FontAwesome onPress={() => { handleOnSelectItem(item) }} style={{ marginTop: 5, marginEnd: 10 }} name="edit" size={30} color="dodgerblue" />
@@ -145,7 +156,8 @@ const ExamAttendanceScreen = ({ navigation, route }) => {
                 studData.push({
                     "Name": value.first_name + ' ' + value.second_name,
                     "Roll no": value.stud_id,
-                    "Status": value.status != null ? value.status : "absent"
+                    "Status": value.status != null ? value.status : "absent",
+                    "Recorded time": value.marked_time != null ? value.marked_time : 'Attendance not recorded'
                 })
             }
         })
@@ -153,7 +165,7 @@ const ExamAttendanceScreen = ({ navigation, route }) => {
         console.log(studData);
         var ws = XLSX.utils.json_to_sheet(studData);
         var wb = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(wb, ws, "Cities");
+        XLSX.utils.book_append_sheet(wb, ws, "Attendance");
         const wbout = XLSX.write(wb, {
             type: 'base64',
             bookType: "xlsx"
@@ -166,7 +178,7 @@ const ExamAttendanceScreen = ({ navigation, route }) => {
 
         await Sharing.shareAsync(uri, {
             mimeType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-            dialogTitle: 'MyWater data',
+            dialogTitle: 'Attendance data',
             UTI: 'com.microsoft.excel.xlsx'
         });
     }
@@ -191,7 +203,7 @@ const ExamAttendanceScreen = ({ navigation, route }) => {
                 </View>
 
                 <FlatList
-                    contentContainerStyle={{ marginTop: 30 }}
+                    contentContainerStyle={{ marginTop: 3, marginBottom: 30 }}
                     data={studentList}
                     keyExtractor={(item, index) => 'key_' + index}
                     renderItem={(itemData) => renderQuickAttendance(itemData.item)}
@@ -261,13 +273,16 @@ const ExamAttendanceScreen = ({ navigation, route }) => {
                             <Text style={{ fontSize: 20, }}>{data && data.batch}</Text>
                         </View>
 
-                        <FlatList
-                            style={{ flexDirection: 'row' }}
-                            contentContainerStyle={{ width: "100%", marginTop: 30, }}
-                            keyExtractor={(item, index) => 'key_' + index}
-                            data={studentList}
-                            renderItem={(itemData) => renderReportList(itemData.item)}
-                        />
+
+                        <ScrollView>
+                            <FlatList
+                                style={{ flexDirection: 'row', marginBottom: 160 }}
+                                contentContainerStyle={{ width: "100%", marginTop: 30, }}
+                                keyExtractor={(item, index) => 'key_' + index}
+                                data={studentList}
+                                renderItem={(itemData) => renderReportList(itemData.item)}
+                            />
+                        </ScrollView>
                     </View>
 
                 </View>
@@ -285,13 +300,17 @@ const ExamAttendanceScreen = ({ navigation, route }) => {
                         <View style={{ alignItems: 'center', flexDirection: 'row', marginTop: 30 }}>
                             <Ionicons
                                 onPress={() => {
-                                    registerAttendance(reportItem && reportItem.stud_id, route.params.slno, 'present', () => {
+                                    var d = new Date();
+                                    var markedDate = zeroPreponder(d.getDate()) + '-' + zeroPreponder(d.getMonth() + 1) + '-' + d.getFullYear() + ' ' + zeroPreponder(d.getHours()) + ':' + zeroPreponder(d.getMinutes());
+                                    registerAttendance(reportItem && reportItem.stud_id, route.params.slno, 'present', markedDate, () => {
                                         reloadStudents();
                                         setReportItem(null);
                                     })
                                 }} style={{ marginStart: 10 }} name="ios-checkmark-circle-sharp" size={60} color="green" />
                             <Ionicons onPress={() => {
-                                registerAttendance(reportItem && reportItem.stud_id, route.params.slno, 'absent', () => {
+                                var d = new Date();
+                                var markedDate = zeroPreponder(d.getDate()) + '-' + zeroPreponder(d.getMonth() + 1) + '-' + d.getFullYear() + ' ' + zeroPreponder(d.getHours()) + ':' + zeroPreponder(d.getMinutes());
+                                registerAttendance(reportItem && reportItem.stud_id, route.params.slno, 'absent', markedDate, () => {
                                     reloadStudents()
                                     setReportItem(null);
                                 })
