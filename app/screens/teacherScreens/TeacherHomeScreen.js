@@ -37,6 +37,7 @@ const TeacherHomeScreen = ({ navigation }) => {
                 <Text style={{ marginTop: 5 }}>{item.subject}</Text>
                 <Text style={{ marginTop: 5 }}>{item.exam_date}</Text>
                 <Text style={{ marginTop: 5 }}>{item.exam_session}</Text>
+                <Text style={{ marginTop: 5 }}>{'Room: ' + item.classroom}</Text>
                 <Text style={{ marginTop: 20 }}>{'students:  ' + studCount[index]}</Text>
             </TouchableOpacity>
         )

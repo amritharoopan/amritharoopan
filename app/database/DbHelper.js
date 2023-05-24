@@ -1,5 +1,5 @@
 import * as SQLite from 'expo-sqlite';
-const db = SQLite.openDatabase('test230');
+const db = SQLite.openDatabase('test238');
 
 export const createDataBases = () => {
     db.transaction(tx => {
@@ -56,10 +56,10 @@ export const loadDummyData = () => {
 
 
 
-        tx.executeSql("INSERT INTO invigilation_schedule (invigilator,subject,batch,exam_date,exam_time,exam_session,block,room) VALUES ('teacher.101','Artificial Intelligence', '2020 Int MCA','2023-06-15','08:00','Forenoon','D','200');");
-        tx.executeSql("INSERT INTO invigilation_schedule (invigilator,subject,batch,exam_date,exam_time,exam_session,block,room) VALUES ('teacher.102','Computer Graphics', '2020 Int MCA','2023-06-16','08:00','Forenoon','D','200');");
-        tx.executeSql("INSERT INTO invigilation_schedule (invigilator,subject,batch,exam_date,exam_time,exam_session,block,room) VALUES ('teacher.101','Python Programming', '2020 Int MCA','2023-06-18','15:00','Afternoon','D','206');");
-        tx.executeSql("INSERT INTO invigilation_schedule (invigilator,subject,batch,exam_date,exam_time,exam_session,block,room) VALUES ('teacher.101','Cryptography and Cyber Security', '2018 Int MCA','2023-06-20','15:00','Afternoon','D','206');");
+        tx.executeSql("INSERT INTO invigilation_schedule (invigilator,subject,batch,exam_date,exam_time,exam_session,block,room) VALUES ('teacher.101','Artificial Intelligence', '2020 Int MCA','2023-06-15','08:00','Forenoon','D','D107');");
+        tx.executeSql("INSERT INTO invigilation_schedule (invigilator,subject,batch,exam_date,exam_time,exam_session,block,room) VALUES ('teacher.102','Computer Graphics', '2020 Int MCA','2023-06-16','08:00','Forenoon','D','D107');");
+        tx.executeSql("INSERT INTO invigilation_schedule (invigilator,subject,batch,exam_date,exam_time,exam_session,block,room) VALUES ('teacher.101','Python Programming', '2020 Int MCA','2023-06-18','15:00','Afternoon','D','D107');");
+        tx.executeSql("INSERT INTO invigilation_schedule (invigilator,subject,batch,exam_date,exam_time,exam_session,block,room) VALUES ('teacher.101','Cryptography and Cyber Security', '2018 Int MCA','2023-06-20','15:00','Afternoon','D','D107');");
 
 
         tx.executeSql("INSERT INTO students (stud_id,stud_batch,first_name,second_name,email,gender,dob,contact,address) VALUES ('KH.SC.I5MCA18001','2018 Int MCA','Abhirami','A','some_email','female','1999-08-02',9995559990,'some house at some where');");
@@ -201,6 +201,16 @@ export const getStudentInfo = (stud_id, callBack) => {
 
 }
 
+export const getTeacherInfo = (stud_id, callBack) => {
+    db.transaction(tx => {
+        tx.executeSql("select * from teachers where tcode = '" + stud_id + "';", null,
+            (txtObj, resultSet) => callBack(resultSet.rows._array),
+            (txObj, error) => console.log(error.message)
+        )
+    });
+
+}
+
 export const getSeats = (stud_id, callBack) => {
     db.transaction(tx => {
         tx.executeSql("SELECT * from exam_seat WHERE room_no = (SELECT room_no from exam_seat where stud_id = '" + stud_id + "') ", null,
@@ -253,6 +263,15 @@ export const getStudCount = (batchName, callBack) => {
     db.transaction(tx => {
         tx.executeSql("select * from students where stud_batch = '" + batchName + "';", null,
             (txObj, resultSet) => callBack(resultSet.rows.length),
+            (txObj, error) => console.log(error.message)
+        )
+    });
+}
+
+export const getStudList = (batchName, callBack) => {
+    db.transaction(tx => {
+        tx.executeSql("select * from students where stud_batch = '" + batchName + "';", null,
+            (txObj, resultSet) => callBack(resultSet.rows._array),
             (txObj, error) => console.log(error.message)
         )
     });

@@ -4,6 +4,7 @@ import CustomTabBar from '../components/CustomTabBar';
 import TeacherHomeScreen from '../screens/teacherScreens/TeacherHomeScreen';
 import TeacherInnerNavigation from './TeacherInnerNavigation';
 import TeacherTimeTable from '../screens/teacherScreens/TeacherTimeTable';
+import TeacherProfileScreen from '../screens/teacherScreens/TeacherProfileScreen';
 
 const Tab = createBottomTabNavigator();
 const TeacherNavigation = () => {
@@ -29,7 +30,7 @@ const TeacherNavigation = () => {
             />
             <Tab.Screen
                 name='StudentProfile'
-                component={TeacherHomeScreen}
+                component={TeacherProfileScreen}
                 options={{
                     headerShown: false,
                 }}

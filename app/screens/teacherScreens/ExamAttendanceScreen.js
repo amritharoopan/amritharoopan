@@ -2,7 +2,7 @@ import { Alert, Button, FlatList, Image, Modal, ScrollView, StyleSheet, Text, To
 import React, { useEffect, useState } from 'react'
 import StatusBarExcludedArea from '../../components/StatusBarExcludedArea'
 import Colors from '../../constants/Colors'
-import { addToAttendance, checkIfStudentIsAttending, getInvigilationFromSlNo, getStudentsFromBatch, registerAttendance } from '../../database/DbHelper'
+import { addToAttendance, checkIfStudentIsAttending, getInvigilationFromSlNo, getStudList, getStudentsFromBatch, registerAttendance } from '../../database/DbHelper'
 import { BarCodeScanner } from 'expo-barcode-scanner'
 import { Ionicons, FontAwesome, MaterialCommunityIcons } from '@expo/vector-icons';
 import LottieView from 'lottie-react-native'
@@ -20,6 +20,7 @@ const ExamAttendanceScreen = ({ navigation, route }) => {
     const [reportVisible, setReportVisible] = useState(false);
     const [entrySuccess, setEntrySuccess] = useState(false)
     const [reportItem, setReportItem] = useState(null);
+    const [firstIteration, setFirstIteration] = useState(true);
 
 
     const requestCameraPermission = () => {
@@ -31,6 +32,11 @@ const ExamAttendanceScreen = ({ navigation, route }) => {
 
     const [data, setData] = useState(undefined);
     useEffect(() => {
+        getStudList(route.params.batch, (data) => {
+            data.forEach(element => {
+                addToAttendance(element.stud_id, route.params.slno)
+            });
+        });
         getInvigilationFromSlNo(route.params.slno, (data) => {
             if (data.length > 0) {
                 setData(data[0])
@@ -42,9 +48,6 @@ const ExamAttendanceScreen = ({ navigation, route }) => {
 
     const reloadStudents = () => getStudentsFromBatch(route.params.batch, (data) => {
         setStudentList(data);
-        console.log("LISSSSttt ===========================================================");
-        console.log(data);
-        console.log("LISSSSttt ===========================================================");
 
     });
 
@@ -92,8 +95,11 @@ const ExamAttendanceScreen = ({ navigation, route }) => {
         })
     }
 
-    const renderQuickAttendance = (item) => {
-        addToAttendance(item.stud_id, route.params.slno)
+    const renderQuickAttendance = (item, index) => {
+        if (firstIteration) {
+            reloadStudents();
+            setFirstIteration(false);
+        }
         return (
             item.exam_id == route.params.slno && item.status == null && <View style={{ flex: 1, flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 10, width: '100%' }
             }>
@@ -206,7 +212,7 @@ const ExamAttendanceScreen = ({ navigation, route }) => {
                     contentContainerStyle={{ marginTop: 3, marginBottom: 30 }}
                     data={studentList}
                     keyExtractor={(item, index) => 'key_' + index}
-                    renderItem={(itemData) => renderQuickAttendance(itemData.item)}
+                    renderItem={(itemData) => renderQuickAttendance(itemData.item, itemData.index)}
                 />
             </View>
 

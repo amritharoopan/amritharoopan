@@ -13,6 +13,7 @@ const LoginScreen = ({ navigation }) => {
   const [username, setUsername] = useState('teacher.101');
   const [password, setPassword] = useState('pass');
   const authContext = useContext(AuthContext);
+  const [loweCaseDetected, setLoweCaseDetected] = useState(false)
 
 
   const handleLogin = (data) => {
@@ -29,13 +30,25 @@ const LoginScreen = ({ navigation }) => {
 
   }
 
+  const handleUserNameChange = (text) => {
+    setUsername(text);
+    if (text != text.toUpperCase()) {
+      setLoweCaseDetected(true);
+      console.log('lowercase');
+    } else {
+      setLoweCaseDetected(false);
+      console.log('uppercase');
+    }
+  }
+
   return (
     <ScrollView style={{ backgroundColor: Colors.white, flex: 1 }}>
 
       <StatusBarExcludedArea style={{ width: '100%' }}>
         <Text style={{ color: Colors.white, fontSize: 34, marginHorizontal: 30, marginTop: 20, }}>Login</Text>
         <Text style={{ color: Colors.white, fontSize: 15, marginHorizontal: 33, marginTop: 28, }} >Username</Text>
-        <TextInput style={styles.input} onChangeText={setUsername} />
+        <TextInput style={styles.input} onChangeText={handleUserNameChange} />
+        {loweCaseDetected && <Text style={{ color: 'yellow', marginHorizontal: 30, marginTop: -6 }}>Username cannot contain lower case letters</Text>}
         <Text style={{ color: Colors.white, fontSize: 15, marginHorizontal: 33, marginTop: 15, }}>Password</Text>
         <TextInput style={styles.input} secureTextEntry onChangeText={setPassword} />
         <View style={{ alignItems: 'center', flexDirection: 'row', marginBottom: 100, marginHorizontal: 33, marginTop: 30 }}>
